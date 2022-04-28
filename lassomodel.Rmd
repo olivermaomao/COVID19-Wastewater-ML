@@ -1,0 +1,54 @@
+---
+title: "stat6500fitmodel"
+author: "Haotian Xie"
+date: "4/27/2022"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(glmnet)
+library(leaps)
+```
+# contruct data
+
+```{r}
+mydata= encoded_cleaned <- read.csv("~/Downloads/COVID19-Wastewater-ML-main 2/encoded_cleaned.csv")
+
+
+mydata = mydata[,c("Staff.Reported.Positive.Tests", "X..of.Currently.Positive.Staff","Staff.Deaths","Isolation.Inmates" ,"Positive.Inmates","Confirmed.Inmate.Deaths","Pending.Results" ,"Recovered.Inmates","Daily.Recovered" ,"Presumptive.Cases","Average.Presumptive.Cases" ,"N1","N2")]
+mydata= na.omit(mydata)
+mean_n1n2 = (mydata$N1+mydata$N2)/2
+mydata=cbind.data.frame(mean_n1n2,mydata)
+mydata=mydata[,-c(13,14)]
+```
+# simple linear regression
+```{r}
+
+model_linear = lm(mean_n1n2~.,data=mydata)
+summary(model_linear)
+# note the result shows that predictors are not independent.
+```
+
+
+
+
+```{r}
+x1 = model.matrix(mean_n1n2~.,mydata)[,-1]
+y1 = mydata$mean
+mod_cv = cv.glmnet(x1,y1,alpha = 1,nfolds = 5)
+bestlam=mod_cv$lambda.min
+
+mod_cv$lambda.1se
+coef(mod_cv,mod_cv$lambda.min)
+
+```
+
+
+
